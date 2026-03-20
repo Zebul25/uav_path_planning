@@ -1,0 +1,126 @@
+# DEM无人机路径规划实验配置文件
+
+# ==================== 环境配置 ====================
+environment:
+  # 地形参数
+  terrain:
+    size_x: 1000.0          # 地形X方向尺寸 (米)
+    size_y: 1000.0          # 地形Y方向尺寸 (米)
+    resolution: 10.0        # 网格分辨率 (米)
+    max_height: 500.0       # 最大高程 (米)
+    dem_file: null          # DEM文件路径，null则使用生成地形
+    terrain_type: "hills"   # 地形类型: flat, hills, mountains, valley
+  
+  # 无人机参数
+  uav:
+    max_velocity_xy: 15.0   # 最大水平速度 (m/s)
+    max_velocity_z: 5.0     # 最大垂直速度 (m/s)
+    max_turn_rate: 45.0     # 最大转向率 (度/s)
+    sensor_range: 100.0     # 感知范围 (米)
+    collision_radius: 2.0   # 碰撞半径 (米)
+  
+  # 任务参数
+  task:
+    safe_altitude: 20.0     # 最小安全高度 (米)
+    max_altitude: 300.0     # 最大飞行高度 (米)
+    goal_threshold: 10.0    # 到达目标阈值 (米)
+    max_steps: 500          # 最大步数
+    dt: 0.1                 # 仿真时间步 (秒)
+  
+  # 起点和终点设置
+  spawn:
+    start_random: true      # 随机起点
+    start_position: [50.0, 50.0, 100.0]   # 固定起点
+    goal_random: true       # 随机终点
+    goal_position: [950.0, 950.0, 100.0]  # 固定终点
+    min_start_goal_dist: 500.0  # 起点终点最小距离
+
+# ==================== 奖励配置 ====================
+reward:
+  # 奖励权重
+  distance_weight: 10.0     # 距离奖励权重
+  goal_reward: 500.0        # 到达目标奖励
+  collision_penalty: -200.0 # 碰撞惩罚
+  low_altitude_penalty: -2.0  # 低空惩罚系数
+  high_altitude_penalty: -0.5 # 高空惩罚系数
+  energy_penalty: -0.01     # 能耗惩罚系数
+  time_penalty: -0.1        # 时间惩罚
+  
+  # 奖励裁剪
+  clip_reward: true
+  reward_min: -10.0
+  reward_max: 10.0
+
+# ==================== 训练配置 ====================
+training:
+  # 通用参数
+  seed: 42
+  device: "auto"            # auto, cpu, cuda
+  total_timesteps: 1000000  # 总训练步数
+  eval_freq: 10000          # 评估频率
+  n_eval_episodes: 10       # 评估episode数
+  save_freq: 50000          # 模型保存频率
+  
+  # SAC参数
+  sac:
+    learning_rate: 0.0003
+    buffer_size: 1000000
+    batch_size: 256
+    gamma: 0.99
+    tau: 0.005
+    ent_coef: "auto"
+    target_entropy: "auto"
+    train_freq: 1
+    gradient_steps: 1
+    learning_starts: 10000
+    policy_kwargs:
+      net_arch: [256, 256]
+  
+  # PPO参数
+  ppo:
+    learning_rate: 0.0003
+    n_steps: 2048
+    batch_size: 64
+    n_epochs: 10
+    gamma: 0.99
+    gae_lambda: 0.95
+    clip_range: 0.2
+    clip_range_vf: null
+    ent_coef: 0.01
+    vf_coef: 0.5
+    max_grad_norm: 0.5
+    n_envs: 16
+    policy_kwargs:
+      net_arch:
+        pi: [256, 256]
+        vf: [256, 256]
+
+# ==================== 评估配置 ====================
+evaluation:
+  n_episodes: 100
+  render: false
+  save_trajectories: true
+  metrics:
+    - success_rate
+    - avg_path_length
+    - avg_episode_length
+    - collision_rate
+    - avg_cumulative_reward
+
+# ==================== 可视化配置 ====================
+visualization:
+  render_mode: "3d"         # 2d, 3d
+  save_animation: true
+  animation_fps: 30
+  show_terrain: true
+  show_trajectory: true
+  show_goal: true
+  colormap: "terrain"
+
+# ==================== 日志配置 ====================
+logging:
+  log_dir: "results/logs"
+  model_dir: "results/models"
+  figure_dir: "results/figures"
+  tensorboard: true
+  verbose: 1
